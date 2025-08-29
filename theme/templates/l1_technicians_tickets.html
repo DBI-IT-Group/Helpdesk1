@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load heroicons %}
+
+{% block sidebar %}
+
+<div class="flex flex-col w-64 h-full p-4  font-sans bg-gray-50">
+    <!-- Panel Header -->
+    <div class="mb-6 p-4 rounded-lg shadow-md bg-white">
+        <h1 class="text-xl font-bold text-gray-800">
+            Technician
+        </h1>
+        <p class="text-sm text-gray-500">Level 1</p>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-1 space-y-1">
+        <ul class="dashboard-menu">
+            <li>
+                <a href="{% url 'technician_dashboard' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-gray-100 font-semibold{% endif %} hover:bg-gray-100">
+                    {% heroicon_outline "home" class="w-5 h-5" %}Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'l1_technicians_tickets' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "clipboard-document-list" class="w-5 h-5" %} Ticket Management
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Logout anchored at bottom -->
+    <div class="mt-auto">
+        <a href="{% url 'logout' %}" 
+           class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-700 text-white hover:bg-red-500 hover:text-white">
+            {% heroicon_outline "arrow-left-on-rectangle" class="w-5 h-5" %}Logout
+        </a>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block content %}
+<div class="p-6">
+
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2 text-center">Ticket Management</h2>
+        <p class="text-gray-600 text-sm text-center">Manage and track your assigned tickets efficiently.</p>
+    </div>
+
+    <!-- Filters -->
+    <form id="filterForm" method="get" class="flex flex-wrap gap-4 mb-6 justify-center">
+        <select name="priority" onchange="this.form.submit()" class="px-3 py-2 border rounded-md bg-white shadow-sm">
+            <option value="">All Priorities</option>
+            <option value="High" {% if request.GET.priority == 'High' %}selected{% endif %}>High</option>
+            <option value="Medium" {% if request.GET.priority == 'Medium' %}selected{% endif %}>Medium</option>
+            <option value="Low" {% if request.GET.priority == 'Low' %}selected{% endif %}>Low</option>
+        </select>
+
+        <select name="order" onchange="this.form.submit()" class="px-3 py-2 border rounded-md bg-white shadow-sm">
+            <option value="newest" {% if request.GET.order == 'newest' %}selected{% endif %}>Newest First</option>
+            <option value="oldest" {% if request.GET.order == 'oldest' %}selected{% endif %}>Oldest First</option>
+        </select>
+
+        <select name="department" onchange="this.form.submit()" class="px-3 py-2 border rounded-md bg-white shadow-sm">
+            <option value="">All Departments</option>
+            <option value="IT" {% if request.GET.department == 'IT' %}selected{% endif %}>IT</option>
+            <option value="HR" {% if request.GET.department == 'HR' %}selected{% endif %}>HR</option>
+            <option value="Finance" {% if request.GET.department == 'Finance' %}selected{% endif %}>Finance</option>
+        </select>
+    </form>
+
+    {% if tickets %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for ticket in tickets %}
+        <div class="bg-white shadow-sm rounded-xl overflow-hidden transform transition hover:scale-105 hover:shadow-xl duration-300">
+            <!-- Card Header -->
+            <div class="px-4 py-3 flex justify-between items-center border-b border-gray-200 bg-gray-700">
+                <div class="flex flex-col">
+                    <h5 class="font-semibold text-gray-800 flex items-center gap-2 text-white">
+                        {% if ticket.status == 'Pending' %}
+                            {% heroicon_outline "clock" class="w-5 h-5 text-yellow-500" %}
+                        {% elif ticket.status == 'Resolved' %}
+                            {% heroicon_outline "check-circle" class="w-5 h-5 text-green-500" %}
+                        {% else %}
+                            {% heroicon_outline "exclamation-circle" class="w-5 h-5 text-red-500" %}
+                        {% endif %}
+                        {{ ticket.ticket_title }}
+                    </h5>
+                    <span class="text-gray-200 text-sm">#{{ ticket.ticket_number }}</span>
+                </div>
+
+                <!-- Priority Badge -->
+                <span class="px-3 py-1 text-xs font-semibold rounded-full {% if ticket.priority_level == 'High' %}bg-red-500 text-white{% elif ticket.priority_level == 'Medium' %}bg-yellow-400 text-gray-800{% else %}bg-green-500 text-white{% endif %}">
+                    {{ ticket.priority_level }}
+                </span>
+            </div>
+
+            <!-- Card Body -->
+            <div class="p-4 space-y-3">
+                <p class="text-gray-700 truncate">
+                    <strong>Description:</strong> {{ ticket.problem_description }}
+                </p>
+                <p class="text-gray-600 text-sm"><strong>Date:</strong> {{ ticket.date_created_on|date:"M d, Y - H:i" }}</p>
+                <p class="text-gray-600 text-sm"><strong>Status:</strong> 
+                    <span class="px-2 py-1 rounded-full text-xs font-medium {% if ticket.status == 'Pending' %}bg-yellow-100 text-yellow-800{% elif ticket.status == 'Resolved' %}bg-green-100 text-green-800{% else %}bg-gray-200 text-gray-700{% endif %}">
+                        {{ ticket.status }}
+                    </span>
+                </p>
+
+                <!-- Actions -->
+                <div class="flex flex-wrap gap-2 mt-2">
+                    {% if ticket.status == 'Pending' %}
+                    <form method="post" action="{% url 'accept_ticket' ticket.id %}" class="flex-1">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium hover:bg-blue-700 transition">Accept</button>
+                    </form>
+                    {% endif %}
+
+                    <button 
+                        class="flex-1 bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-gray-300 transition"
+                        {% if ticket.status != 'Pending' %} data-bs-toggle="modal" data-bs-target="#viewTicketModal{{ ticket.id }}"{% else %} disabled{% endif %}>
+                        View
+                    </button>
+
+                    <a href="{% if ticket.status != 'Pending' %}mailto:{{ ticket.user.email }}?subject=Requesting Info{% endif %}" 
+                       class="flex-1 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium text-center hover:bg-yellow-200 transition {% if ticket.status == 'Pending' %}opacity-50 cursor-not-allowed{% endif %}">
+                       Request Info
+                    </a>
+
+                    <button 
+                        class="flex-1 bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-red-200 transition escalate-link {% if ticket.status == 'Pending' %}opacity-50 cursor-not-allowed{% endif %}" 
+                        data-ticket-id="{{ ticket.id }}">
+                        Escalate
+                    </button>
+
+                    {% if ticket.status != 'Pending' %}
+                    <a href="{% url 'complete_ticket' ticket.id %}" class="flex-1 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium text-center hover:bg-green-200 transition">Resolve</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- View Ticket Modal -->
+        <div class="modal fade" id="viewTicketModal{{ ticket.id }}" tabindex="-1" aria-labelledby="viewTicketLabel{{ ticket.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content rounded-lg shadow-lg">
+                    <div class="modal-header bg-gray-700 text-white px-4 py-3">
+                        <h5 class="modal-title" id="viewTicketLabel{{ ticket.id }}">Ticket Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4 space-y-2">
+                        <p><strong>Ticket Number:</strong> {{ ticket.ticket_number }}</p>
+                        <p><strong>Title:</strong> {{ ticket.ticket_title }}</p>
+                        <p><strong>Description:</strong> {{ ticket.problem_description }}</p>
+                        <p><strong>Department:</strong> {{ ticket.department }}</p>
+                        <p><strong>Priority:</strong> 
+                            <span class="px-2 py-1 text-xs font-medium rounded-full {% if ticket.priority_level == 'High' %}bg-red-500 text-white{% elif ticket.priority_level == 'Medium' %}bg-yellow-400 text-gray-800{% else %}bg-green-500 text-white{% endif %}">
+                                {{ ticket.priority_level }}
+                            </span>
+                        </p>
+                        <p><strong>Status:</strong> {{ ticket.status }}</p>
+                        <p><strong>Date Created:</strong> {{ ticket.date_created_on|date:"M d, Y - H:i" }}</p>
+                        <p><strong>User Email:</strong> {{ ticket.user.email }}</p>
+
+                        {% if ticket.attachment %}
+                            {% with ticket.attachment.url|lower as url %}
+                            {% if url|slice:"-4:" == ".jpg" or url|slice:"-4:" == ".png" or url|slice:"-5:" == ".jpeg" %}
+                                <img src="{{ ticket.attachment.url }}" class="w-full rounded mt-2">
+                            {% else %}
+                                <a href="{{ ticket.attachment.url }}" target="_blank" class="text-blue-600 hover:underline mt-2 inline-block">Download Attachment</a>
+                            {% endif %}
+                            {% endwith %}
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer p-4">
+                        <button type="button" class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-300" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-center text-gray-500 text-lg mt-6">No tickets available.</p>
+    {% endif %}
+
+</div>
+
+<!-- Escalate Modal -->
+<div class="modal fade" id="escalateModal" tabindex="-1" aria-labelledby="escalateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-lg shadow-lg">
+            <form method="post" id="escalateForm">
+                {% csrf_token %}
+                <div class="modal-header bg-red-600 text-white px-4 py-3">
+                    <h5 class="modal-title" id="escalateModalLabel">Escalate Ticket</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <textarea name="note" class="w-full border rounded-md p-2 focus:ring focus:ring-red-300" rows="4" placeholder="Write your escalation note..." required></textarea>
+                </div>
+                <div class="modal-footer p-4">
+                    <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Escalate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.escalate-link').forEach(link => {
+  link.addEventListener('click', function(e) {
+    e.preventDefault();
+    const ticketId = this.getAttribute('data-ticket-id');
+    const form = document.getElementById('escalateForm');
+    form.action = `/ticket/${ticketId}/escalate/`;
+    const modal = new bootstrap.Modal(document.getElementById('escalateModal'));
+    modal.show();
+  });
+});
+</script>
+
+{% endblock %}

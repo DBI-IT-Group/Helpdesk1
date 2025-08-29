@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load heroicons %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block sidebar %}
+<div class="flex flex-col w-64 h-full p-4  font-sans bg-gray-50">
+    <!-- Panel Header -->
+    <div class="mb-6 p-4 rounded-lg shadow-md bg-white">
+        <h1 class="text-xl font-bold text-gray-800">
+            Admin
+        </h1>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-1 space-y-1">
+        <ul class="dashboard-menu">
+            <li>
+                <a href="{% url 'admin_dashboard' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-gray-100 font-semibold{% endif %} hover:bg-gray-100">
+                    {% heroicon_outline "home" class="w-5 h-5" %}Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'manage_tickets' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "clipboard-document-list" class="w-5 h-5" %}Ticket Management
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'reports' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "chart-pie" class="w-5 h-5" %}Reports & Analytics
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'roles_management' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "users" class="w-5 h-5" %}Roles Management
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'user_role_list' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "users" class="w-5 h-5" %}User Management
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'cab_requests' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "folder-plus" class="w-5 h-5" %}CAB Requests
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'cab_requests_table' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "folder-plus" class="w-5 h-5" %}Existing Requests
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Logout anchored at bottom -->
+    <div class="mt-auto">
+        <a href="{% url 'logout' %}" 
+           class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-700 text-white hover:bg-red-500 hover:text-white">
+            {% heroicon_outline "arrow-left-on-rectangle" class="w-5 h-5" %}Logout
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block content %}
+
+
+<div class="max-w-6xl mx-auto mt-8">
+    <h2 class="text-2xl font-semibold text-center text-gray-800 mb-2">Ticket Priority Distribution</h2>
+    <p class="text-gray-500 text-center mb-6">Overview of ticket distribution</p>
+
+
+<div class="flex justify-center min-h-[calc(100vh-100px)] p-4 md:p-8" 
+     style="font-family: var(--default-font-family);">
+    <div class="max-w-6xl w-full">
+        <div class="text-center mb-10">
+            <div class="flex flex-col items-center gap-2 mt-4">
+                <button id="refresh-btn" 
+                        class="flex items-center gap-2 px-4 py-2 rounded-md transition-colors duration-200"
+                        style="background-color: var(--color-gray-50);
+                               border: 1px solid var(--color-gray-200);
+                               color: var(--color-gray-600);"
+                        onmouseover="this.style.backgroundColor='var(--color-gray-100)'"
+                        onmouseout="this.style.backgroundColor='var(--color-gray-50)'">
+                    <span id="refresh-icon">{% heroicon_outline "arrow-path" class="w-4 h-4" %}</span>
+                    <span id="refresh-text">Refresh Data</span>
+                </button>
+                <span id="last-updated-time" class="text-sm" 
+                      style="color: var(--color-gray-500);"></span>
+                <div id="error-message" class="hidden text-sm mt-1" 
+                     style="color: var(--color-red-500);"></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            <!-- Low Priority -->
+            <div class="p-6 rounded-xl shadow-md hover:-translate-y-1 hover:shadow-lg transition-all duration-300 max-w-sm w-full"
+                 style="background-color: var(--color-white);
+                        border-top: 4px solid var(--color-green-500);
+                        color: var(--color-gray-700);">
+                <div class="mb-4 text-emerald-400">{% heroicon_outline "shield-check" class="w-6 h-6" %}</div>
+                <p class="text-green-700 font-medium" style="color: var(--color-gray-600);">Low Priority Tickets</p>
+                <h2 id="low-priority-count" class="text-4xl font-bold my-2">{{ priorityData.Low|default:"0" }}</h2>
+                <div class="text-sm mt-3" style="color: var(--color-gray-500);">No immediate action required</div>
+            </div>
+
+            <!-- Medium Priority -->
+            <div class="p-6 rounded-xl shadow-md hover:-translate-y-1 hover:shadow-lg transition-all duration-300 max-w-sm w-full"
+                 style="background-color: var(--color-white);
+                        border-top: 4px solid var(--color-yellow-500);
+                        color: var(--color-gray-700);">
+                <div class="mb-4 text-amber-400">{% heroicon_outline "exclamation-triangle" class="w-6 h-6" %}</div>
+                <p class="text-base font-medium" style="color: var(--color-gray-600);">Medium Priority Tickets</p>
+                <h2 id="medium-priority-count" class="text-4xl font-bold my-2">{{ priorityData.Medium|default:"0" }}</h2>
+                <div class="text-sm mt-3" style="color: var(--color-gray-500);">Review recommended</div>
+            </div>
+
+            <!-- High Priority -->
+            <div class="p-6 rounded-xl shadow-md hover:-translate-y-1 hover:shadow-lg transition-all duration-300 max-w-sm w-full"
+                 style="background-color: var(--color-white);
+                        border-top: 4px solid var(--color-red-500);
+                        color: var(--color-gray-700);">
+                <div class="mb-4 text-red-500">{% heroicon_outline "fire" class="w-6 h-6" %}</div>
+                <p class="text-base font-medium" style="color: var(--color-gray-600);">High Priority Tickets</p>
+                <h2 id="high-priority-count" class="text-4xl font-bold my-2">{{ priorityData.High|default:"0" }}</h2>
+                <div class="text-sm mt-3" style="color: var(--color-gray-500);">Immediate attention required</div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+<!-- JAVASCRIPT CODE -->
+{% block extra_js %}
+<script>
+const refreshBtn = document.getElementById("refresh-btn");
+const lastUpdated = document.getElementById("last-updated-time");
+
+function fetchLatestData() {
+    setRefreshButtonState(true, true);
+
+    fetch("/metrics/", {
+        headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "application/json"
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+    })
+    .then(data => {
+        updateMetric("low-priority-count", data.priority_data?.Low ?? 0);
+        updateMetric("medium-priority-count", data.priority_data?.Medium ?? 0);
+        updateMetric("high-priority-count", data.priority_data?.High ?? 0);
+
+        lastUpdated.textContent = new Intl.DateTimeFormat("en-US", { timeStyle: "short" }).format(new Date());
+        hideError();
+        setRefreshButtonState(false);
+    })
+    .catch(error => {
+        console.error("Error fetching data:", error);
+        showError("Failed to refresh data. Please try again.");
+        setRefreshButtonState(false);
+    });
+}
+
+function setRefreshButtonState(isDisabled, isLoading = false) {
+    refreshBtn.disabled = isDisabled;
+    document.getElementById("refresh-icon").classList.toggle("animate-spin", isLoading);
+    document.getElementById("refresh-text").textContent = isLoading ? "Refreshing..." : "Refresh Data";
+}
+
+function showError(message) {
+    const errorDiv = document.getElementById("error-message");
+    errorDiv.textContent = message;
+    errorDiv.classList.remove("hidden");
+}
+
+function hideError() {
+    document.getElementById("error-message").classList.add("hidden");
+}
+
+function updateMetric(id, newValue) {
+    const el = document.getElementById(id);
+    const currentValue = parseInt(el.textContent, 10) || 0;
+    if (currentValue === newValue) return;
+
+    const duration = 500;
+    const startTime = performance.now();
+
+    function animate(time) {
+        const progress = Math.min((time - startTime) / duration, 1);
+        el.textContent = Math.floor(currentValue + (newValue - currentValue) * progress);
+        if (progress < 1) requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
+}
+
+refreshBtn.addEventListener("click", fetchLatestData);
+
+</script>
+<style>
+@keyframes pulseUpdate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.animate-pulseUpdate {
+    animation: pulseUpdate 0.5s ease;
+}
+</style>
+{% endblock %}

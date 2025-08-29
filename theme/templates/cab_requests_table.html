@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load heroicons%}
+
+{% block title %}CAB Requests Table{% endblock %}
+
+{% block sidebar %}
+<div class="flex flex-col w-64 h-full p-4 bg-gray-50 font-sans">
+    <div class="mb-6 p-4 rounded-lg shadow-md bg-white">
+        <h1 class="text-xl font-bold text-gray-800">
+            Admin Panel
+        </h1>
+    </div>
+
+    <nav class="flex-1 space-y-1">
+        <ul class="dashboard-menu">
+            <li>
+                <a href="{% url 'admin_dashboard' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-gray-100 font-semibold{% endif %} hover:bg-gray-100">
+                    {% heroicon_outline "home" class="w-5 h-5" %}Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'manage_tickets' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "clipboard-document-list" class="w-5 h-5" %}Ticket Management
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'reports' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "chart-pie" class="w-5 h-5" %}Reports & Analytics
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'roles_management' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "users" class="w-5 h-5" %}Roles Management
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'user_role_list' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "users" class="w-5 h-5" %}User Management
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'cab_requests' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "folder-plus" class="w-5 h-5" %}CAB Requests
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'cab_requests_table' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "folder-plus" class="w-5 h-5" %}Existing Requests
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="mt-auto">
+        <a href="{% url 'logout' %}" 
+           class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-700 text-white hover:bg-red-500 hover:text-white">
+            {% heroicon_outline "arrow-left-on-rectangle" class="w-5 h-5" %}Logout
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div class="mb-6 py-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2 text-center">CAB Requests</h2>
+        <p class="text-gray-600 text-sm text-center">View and manage all Change Advisory Board (CAB) requests submitted by users.</p>
+    </div>
+
+<!-- <div class="p-4 overflow-x-auto border border-gray-200 rounded-lg shadow bg-white max-w-7xl mx-auto my-8"> -->
+    <table class="divide-y divide-gray-200 text-sm w-full max-w-7xl mx-auto my-8 border border-gray-100 rounded-lg shadow bg-white">
+        <thead class="bg-gray-700 text-white">
+            <tr>
+                <th class="px-4 py-2 text-left w-1/12">Requested By</th>
+                <th class="px-4 py-2 text-left w-1/12">Change Type</th>
+                <th class="px-4 py-2 text-left w-1/12">Title</th>
+                <th class="px-4 py-2 text-left w-2/12">Description</th>
+                <th class="px-4 py-2 text-left w-1/12">Risk</th>
+                <th class="px-4 py-2 text-left w-1/12">Implementation</th>
+                <th class="px-4 py-2 text-left w-1/12">Rollback</th>
+                <th class="px-4 py-2 text-left w-1/12">Status</th>
+                <th class="px-4 py-2 text-left w-2/12">Rejection Reason</th>
+                <th class="px-4 py-2 text-left w-1/12">Date</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+            {% for request in requests %}
+            <tr class="hover:bg-gray-50">
+                <td class="px-4 py-2 truncate" title="{{ request.requester.full_name }}">
+                    {{ request.requester.full_name|truncatechars:12 }}
+                </td>
+                <td class="px-4 py-2 truncate" title="{{ request.change_type }}">
+                    {{ request.change_type|truncatechars:12 }}
+                </td>
+                <td class="px-4 py-2 truncate" title="{{ request.title }}">
+                    {{ request.title|truncatewords:3 }}
+                </td>
+                <td class="px-4 py-2 truncate" title="{{ request.description }}">
+                    {{ request.description|truncatewords:5 }}
+                </td>
+                <td class="px-4 py-2 truncate" title="{{ request.risk_assessment }}">
+                    {{ request.risk_assessment|truncatewords:3 }}
+                </td>
+                <td class="px-4 py-2 truncate" title="{{ request.implementation_plan }}">
+                    {{ request.implementation_plan|truncatewords:3 }}
+                </td>
+                <td class="px-4 py-2 truncate" title="{{ request.rollback_plan }}">
+                    {{ request.rollback_plan|truncatewords:3 }}
+                </td>
+                <td class="px-4 py-1">
+                    <span class="px-2 py-0.5 rounded text-xs font-medium 
+                                {% if request.status == 'approved' %}bg-green-100 text-green-800
+                                {% elif request.status == 'rejected' %}bg-red-100 text-red-800
+                                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                        {{ request.get_status_display }}
+                    </span>
+                </td>
+                <td class="px-4 py-2 truncate" title="{% if request.status == 'rejected' %}{{ request.get_rejection_reason_display }}{% endif %}">
+                    {% if request.status == "rejected" %}
+                        {{ request.get_rejection_reason_display|default:"-"|truncatechars:15 }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td class="px-4 py-2">
+                    {{ request.created_at|date:"M d" }}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="10" class="text-center py-4 text-gray-500">
+                    No CAB requests available.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load heroicons %}
+
+{% block top_button %}
+<button class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700">
+    Tickets
+    <span class="absolute -top-2 -right-3 inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-blue-800 bg-blue-100 rounded-full">
+        {{ total_l2_tickets }}
+    </span>
+</button>
+{% endblock %}
+
+{% block sidebar %}
+
+<div class="flex flex-col w-64 h-full p-4  font-sans bg-gray-50">
+    <!-- Panel Header -->
+    <div class="mb-6 p-4 rounded-lg shadow-md bg-white">
+        <h1 class="text-xl font-bold text-gray-800">
+            Admin Panel
+        </h1>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-1 space-y-1">
+        <ul class="dashboard-menu">
+            <li>
+                <a href="{% url 'escalated_tickets' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-gray-100 font-semibold{% endif %} hover:bg-gray-100">
+                    {% heroicon_outline "home" class="w-5 h-5" %}Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'l2_technician_dashboard' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "clipboard-document-list" class="w-5 h-5" %}Resolved Tickets
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'technician_requests' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "chart-pie" class="w-5 h-5" %}CAB Requests
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'technician_requestslist' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "users" class="w-5 h-5" %}Requests List
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Logout anchored at bottom -->
+    <div class="mt-auto">
+        <a href="{% url 'logout' %}" 
+           class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-700 text-white hover:bg-red-500 hover:text-white">
+            {% heroicon_outline "arrow-left-on-rectangle" class="w-5 h-5" %}Logout
+        </a>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+    <h5 class="text-lg font-semibold text-gray-800 text-center">Your Submitted CAB Requests</h5>
+    <p class="text-sm text-gray-600 text-center">Review the status and details of your submitted CAB requests below.</p>
+    <div class="overflow-x-auto bg-white shadow rounded-lg">
+        <table class="min-w-full text-sm text-left text-gray-600">
+            <thead class="bg-gray-700 text-white uppercase text-xs">
+                <tr>
+                    <th class="px-4 py-3">Title</th>
+                    <th class="px-4 py-3">Change Type</th>
+                    <th class="px-4 py-3">Status</th>
+                    <th class="px-4 py-3">Description</th>
+                    <th class="px-4 py-3">Risk Assessment</th>
+                    <th class="px-4 py-3">Implementation Plan</th>
+                    <th class="px-4 py-3">Rollback Plan</th>
+                    <th class="px-4 py-3">Submitted On</th>
+                    <th class="px-4 py-3">Attachment</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for request in submitted_requests %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3">{{ request.title }}</td>
+                        <td class="px-4 py-3">{{ request.change_type }}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-1 text-xs font-semibold rounded
+                                {% if request.status == 'Pending' %} bg-yellow-100 text-yellow-800
+                                {% elif request.status == 'Approved' %} bg-green-100 text-green-800
+                                {% elif request.status == 'Rejected' %} bg-red-100 text-red-800
+                                {% else %} bg-gray-100 text-gray-800 {% endif %}">
+                                {{ request.status }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">{{ request.description }}</td>
+                        <td class="px-4 py-3">{{ request.risk_assessment }}</td>
+                        <td class="px-4 py-3">{{ request.implementation_plan }}</td>
+                        <td class="px-4 py-3">{{ request.rollback_plan }}</td>
+                        <td class="px-4 py-3">{{ request.created_at|date:"M d, Y - H:i" }}</td>
+                        <td class="px-4 py-3">
+                            {% if request.attachment %}
+                                <a href="{{ request.attachment.url }}" target="_blank" class="text-blue-600 hover:underline">
+                                    View
+                                </a>
+                            {% else %}
+                                <span class="text-gray-400">N/A</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="9" class="px-4 py-3 text-center text-gray-500">
+                            No CAB requests submitted yet.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Logout Modal -->
+<div id="logoutConfirmModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-sm">
+        <div class="px-6 py-4 border-b">
+            <h5 class="text-lg font-semibold">Confirm Logout</h5>
+        </div>
+        <div class="px-6 py-4">
+            Are you sure you want to logout?
+        </div>
+        <div class="px-6 py-4 flex justify-end space-x-2 border-t">
+            <button data-modal-close="logoutConfirmModal" class="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300">
+                Cancel
+            </button>
+            <a href="{% url 'logout' %}" class="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700">
+                Logout
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

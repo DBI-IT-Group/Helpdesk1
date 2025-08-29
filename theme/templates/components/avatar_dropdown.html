@@ -1,0 +1,30 @@
+<div class="relative" x-data="{ open: false }" @click.away="open = false">
+    <button @click="open = !open" aria-label="User Menu" class="focus:outline-none">
+        {% if user.avatar %}
+            <img src="{{ user.avatar.url }}" alt="User Avatar"
+                 class="w-10 h-10 rounded-full object-cover border-2 border-white shadow">
+        {% else %}
+            <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white text-sm font-semibold border-2 border-white shadow">
+                {{ user.full_name|default:"U"|first|upper }}
+            </div>
+        {% endif %}
+    </button>
+
+    <div x-show="open" x-transition
+         class="absolute right-0 mt-2 w-48 bg-white text-gray-700 border rounded-md shadow-lg z-30">
+        <div class="px-4 py-3 border-b">
+            <p class="text-sm font-medium">{{ user.full_name }}</p>
+            <p class="text-xs capitalize text-gray-500">{{ user.role }}</p>
+        </div>
+        <ul class="py-1 text-sm">
+            <li><a href="" class="block px-4 py-2 hover:bg-gray-100">Profile</a></li>
+            <li><a href="" class="block px-4 py-2 hover:bg-gray-100">Settings</a></li>
+            <li>
+                <button type="submit" form="logout-form" class="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100">Logout</button>
+                <form method="post" action="{% url 'logout' %}" id="logout-form">
+                    {% csrf_token %}
+                </form>
+            </li>
+        </ul>
+    </div>
+</div>

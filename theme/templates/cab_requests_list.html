@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load heroicons%}
+
+{% block title %}CAB Request List{% endblock %}
+
+{% block sidebar %}
+
+<div class="flex flex-col w-64 h-full p-4  font-sans bg-gray-50">
+    <!-- Panel Header -->
+    <div class="mb-6 p-4 rounded-lg shadow-md bg-white">
+        <h1 class="text-xl font-bold text-gray-800">
+            CAB
+        </h1>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-1 space-y-1">
+        <ul class="dashboard-menu">
+            <li>
+                <a href="{% url 'cab' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-gray-100 font-semibold{% endif %} hover:bg-gray-100">
+                    {% heroicon_outline "home" class="w-5 h-5" %}CAB Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'cab_stats' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "chart-pie" class="w-5 h-5" %}Statistics
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Logout anchored at bottom -->
+    <div class="mt-auto">
+        <a href="{% url 'logout' %}" 
+           class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-700 text-white hover:bg-red-500 hover:text-white">
+            {% heroicon_outline "arrow-left-on-rectangle" class="w-5 h-5" %}Logout
+        </a>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block content %}
+<h2>CAB Requests</h2>
+
+<!-- Filter Form -->
+<form method="get" class="filter-form">
+    <label>Status:
+        <select name="status">
+            <option value="">All</option>
+            <option value="in_progress" {% if status_filter == "in_progress" %}selected{% endif %}>In Progress</option>
+            <option value="approved" {% if status_filter == "approved" %}selected{% endif %}>Approved</option>
+            <option value="rejected" {% if status_filter == "rejected" %}selected{% endif %}>Rejected</option>
+        </select>
+    </label>
+    <label>Change Type:
+        <select name="change_type">
+            <option value="">All</option>
+            <option value="Normal Change" {% if type_filter == "Normal Change" %}selected{% endif %}>Normal</option>
+            <option value="Standard Change" {% if type_filter == "Standard Change" %}selected{% endif %}>Standard</option>
+            <option value="Emergency Change" {% if type_filter == "Emergency Change" %}selected{% endif %}>Emergency</option>
+        </select>
+    </label>
+    <button type="submit">Filter</button>
+</form>
+
+<!-- Request List -->
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Requested By</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for req in requests %}
+        <tr>
+            <td>{{ req.title }}</td>
+            <td>{{ req.change_type }}</td>
+            <td>{{ req.status }}</td>
+            <td><strong></strong>{{ req.requester.full_name|default:req.requester.username|default:"N/A" }}</td>
+            <td>
+                <a href="{% url 'cab_request_detail' req.id %}">View</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No requests found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

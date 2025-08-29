@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% load heroicons%}
+
+{% block title %}CAB Request Detail{% endblock %}
+
+{% block sidebar %}
+
+<div class="flex flex-col w-64 h-full p-4 font-sans bg-gray-50">
+    <!-- Panel Header -->
+    <div class="mb-6 p-4 rounded-lg shadow bg-white">
+        <h1 class="text-xl font-bold text-gray-800">
+            CAB
+        </h1>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-1 space-y-1">
+        <ul>
+            <li>
+                <a href="{% url 'cab' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-gray-200 font-semibold{% endif %} hover:bg-gray-100">
+                    {% heroicon_outline "home" class="w-5 h-5" %}CAB Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'cab_stats' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "chart-pie" class="w-5 h-5" %}Statistics
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Logout anchored at bottom -->
+    <div class="mt-auto">
+        <a href="{% url 'logout' %}" 
+           class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-700 text-white hover:bg-red-500">
+            {% heroicon_outline "arrow-left-on-rectangle" class="w-5 h-5" %}Logout
+        </a>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block content %}
+
+<!-- <div class="flex flex-col items-center px-4 py-6 space-y-6 w-full"> -->
+    <!-- Page Header -->
+    <div class="max-w-6xl mx-auto mt-8 text-center w-full">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-2">CAB Request Detail</h2>
+        <p class="text-gray-500 mb-6">Detailed view of the selected CAB request</p>
+    </div>
+
+    <!-- Request Details Card -->
+
+<div class="max-w-5xl mx-auto py-8 px-4">
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gray-700 text-white px-6 py-3">
+            <h2 class="text-lg font-semibold text-center">Change Request Details</h2>
+        </div>
+        
+        <!-- Body -->
+        <div class="p-6">
+            <div class="overflow-x-auto">
+                <table class="w-full border border-gray-200 rounded-lg">
+                    <tbody class="divide-y divide-gray-200">
+                        <tr class="bg-gray-50">
+                            <th class="w-1/5 px-4 py-2 text-left font-semibold text-gray-700">Change Type</th>
+                            <td class="px-4 py-2">{{ request_obj.change_type }}</td>
+                        </tr>
+                        <tr>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Description</th>
+                            <td class="px-4 py-2 whitespace-pre-wrap">{{ request_obj.description }}</td>
+                        </tr>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Risk Assessment</th>
+                            <td class="px-4 py-2">{{ request_obj.risk_assessment }}</td>
+                        </tr>
+                        <tr>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Implementation Plan</th>
+                            <td class="px-4 py-2">{{ request_obj.implementation_plan }}</td>
+                        </tr>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Rollback Plan</th>
+                            <td class="px-4 py-2">{{ request_obj.rollback_plan }}</td>
+                        </tr>
+                        <tr>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Status</th>
+                            <td class="px-4 py-2">
+                                <span class="px-2 py-1 text-xs font-medium rounded bg-gray-200 text-gray-800">
+                                    {{ request_obj.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Requested By</th>
+                            <td class="px-4 py-2">
+                                {{ request_obj.requester.full_name|default:request_obj.requester.username|default:"N/A" }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+<!-- Actions -->
+<form id="reviewForm" method="post" action="" class="border-t border-gray-200 pt-6 mt-6">
+    {% csrf_token %}
+    <input type="hidden" name="action" id="formAction" value="">
+    
+    <div class="flex flex-col sm:flex-row justify-center gap-4">
+        <button type="button" id="approveButton" 
+                class="inline-flex items-center justify-center px-6 py-3 rounded-full text-white bg-gray-700 hover:bg-green-600">
+            Approve
+        </button>
+        <button type="button" id="rejectButton" 
+                class="inline-flex items-center justify-center px-6 py-3 rounded-full text-white bg-gray-300 hover:bg-red-700">
+            Reject
+        </button>
+    </div>
+
+    <!-- Rejection Reason -->
+    <div id="rejectionReasonDiv" class="hidden mt-6">
+        <div class="bg-gray-50 border rounded-lg p-4">
+            <h5 class="text-lg font-semibold mb-3">Rejection Details</h5>
+            <label for="rejection_reason" class="block mb-2 text-sm font-medium">Select Reason:</label>
+            <select id="rejection_reason" name="rejection_reason" 
+                    class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" required>
+                <option value="">-- Select a reason --</option>
+                <option value="insufficient_info">Insufficient Information</option>
+                <option value="high_risk">High Risk</option>
+                <option value="no_business_justification">No Business Justification</option>
+                <option value="incomplete_rollback_plan">Incomplete Rollback Plan</option>
+                <option value="resource_constraints">Resource Constraints</option>
+            </select>
+            <button type="button" id="submitRejectButton" 
+                    class="mt-4 inline-flex items-center justify-center px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600">
+                Confirm Rejection
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- Confirmation Modal -->
+<div id="confirmationModal" class="fixed inset-0 hidden items-center justify-center bg-black bg-opacity-50 z-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
+        <div class="flex justify-between items-center px-6 py-3 border-b">
+            <h5 class="text-lg font-semibold">Confirm Action</h5>
+            <button type="button" id="modalCancel" class="text-gray-500 hover:text-gray-700">&times;</button>
+        </div>
+        <div class="px-6 py-4">
+            <p id="modalMessage"></p>
+        </div>
+        <div class="flex justify-end gap-3 px-6 py-4 border-t">
+            <button type="button" class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300" id="modalCancelFooter">Cancel</button>
+            <button type="button" id="modalConfirm" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const rejectButton = document.getElementById('rejectButton');
+    const approvalButton = document.getElementById('approveButton');
+    const rejectionReasonDiv = document.getElementById('rejectionReasonDiv');
+    const submitRejectButton = document.getElementById('submitRejectButton');
+    const formAction = document.getElementById('formAction');
+    const modal = document.getElementById('confirmationModal');
+    const modalMessage = document.getElementById('modalMessage');
+    const modalConfirm = document.getElementById('modalConfirm');
+    const modalCancel = document.getElementById('modalCancel');
+    const modalCancelFooter = document.getElementById('modalCancelFooter');
+    const reviewForm = document.getElementById('reviewForm');
+
+    let currentAction = null;
+
+    // Toggle rejection reason
+    rejectButton.addEventListener('click', function() {
+        rejectionReasonDiv.classList.toggle('hidden');
+    });
+
+    // Approve button click
+    approvalButton.addEventListener('click', function() {
+        modalMessage.textContent = 'Are you sure you want to approve this request?';
+        currentAction = 'approve';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    });
+
+    // Submit rejection (after providing reason)
+    submitRejectButton.addEventListener('click', function() {
+        const rejectionReason = document.querySelector('[name="rejection_reason"]');
+        if (!rejectionReason.value) {
+            alert('Please select a rejection reason');
+            return;
+        }
+        modalMessage.textContent = 'Are you sure you want to reject this request?';
+        currentAction = 'reject';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    });
+
+    // Confirm action in modal
+    modalConfirm.addEventListener('click', function() {
+        if (currentAction) {
+            formAction.value = currentAction;
+            reviewForm.submit(); 
+        }
+        modal.classList.add('hidden');
+    });
+
+    // Cancel modal
+    [modalCancel, modalCancelFooter].forEach(btn => {
+        btn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+    });
+});
+</script>
+
+{% endblock %}
+
+
+

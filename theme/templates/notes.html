@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load heroicons%}
+
+
+{% block sidebar %}
+    <nav class="dashboard-menu">
+        <ul >
+            <li>
+                <a href="{% url 'technician_dashboard' %}" id="dashboard-btn">
+                    
+                    {% heroicon_outline "clipboard" %}  Dashboard
+                </a>
+            </li>
+             <li>
+                <a href="#" id="my-notes">
+                    
+                    {% heroicon_outline "clipboard-document-check" %}  My notes
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'l1_technicians_tickets' %}" id="my-tickets-btn">
+                    
+                    {% heroicon_outline "ticket" %}  My Tickets
+                </a>
+            </li>
+           
+            <li>
+                <a href="{% url 'logout' %}" id="logout" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal" id="logout-link">
+                    {% heroicon_outline "arrow-left-start-on-rectangle" %} Logout  
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+
+    
+{% endblock %}
+
+{% block content %}
+
+    <!-- Logout Confirmation Modal -->
+ <div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="logoutConfirmModalLabel">Confirm Logout</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to logout?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <style>
+         #my-notes, #logout, #my-tickets-btn,#dashboard-btn{
+        margin-left: -100px;
+        text-align: left;
+
+        }
+    </style>
+{% endblock %}

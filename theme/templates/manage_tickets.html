@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% load heroicons %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+
+{% block sidebar %}
+<div class="flex flex-col w-64 h-full p-4  font-sans bg-gray-50">
+    <!-- Panel Header -->
+    <div class="mb-6 p-4 rounded-lg shadow-md bg-white">
+        <h1 class="text-xl font-bold text-gray-800">
+            Admin
+        </h1>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-1 space-y-1">
+        <ul class="dashboard-menu">
+            <li>
+                <a href="{% url 'admin_dashboard' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-gray-100 font-semibold{% endif %} hover:bg-gray-100">
+                    {% heroicon_outline "home" class="w-5 h-5" %}Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'manage_tickets' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "clipboard-document-list" class="w-5 h-5" %}Ticket Management
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'reports' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "chart-pie" class="w-5 h-5" %}Reports & Analytics
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'roles_management' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "users" class="w-5 h-5" %}Roles Management
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'user_role_list' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "users" class="w-5 h-5" %}User Management
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'cab_requests' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "folder-plus" class="w-5 h-5" %}CAB Requests
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'cab_requests_table' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "folder-plus" class="w-5 h-5" %}Existing Requests
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Logout anchored at bottom -->
+    <div class="mt-auto">
+        <a href="{% url 'logout' %}" 
+           class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-700 text-white hover:bg-red-500 hover:text-white">
+            {% heroicon_outline "arrow-left-on-rectangle" class="w-5 h-5" %}Logout
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto mt-8">
+    <h2 class="text-2xl font-semibold text-center text-gray-800 mb-2">Ticket Priority Distribution</h2>
+    <p class="text-gray-500 text-center mb-6">Assign tickects to users</p>
+
+    <!-- Filter Section -->
+    <div class="bg-white p-6 rounded-lg shadow mb-8">
+        <form method="get" class="grid gap-4">
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <label for="department" class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                    <select id="department" name="department" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" onchange="this.form.submit()">
+                        <option value="">All Departments</option>
+                        {% for code, name in departments %}
+                            <option value="{{ code }}" {% if request.GET.department == code %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                    <select id="priority" name="priority" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" onchange="this.form.submit()">
+                        <option value="">All Priorities</option>
+                        {% for code, name in priorities %}
+                            <option value="{{ code }}" {% if request.GET.priority == code %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end mt-4">
+                <button type="button" onclick="window.location.search = ''"
+                    class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-300">Reset Filters</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Alerts -->
+    <div id="alertMessage" class="hidden px-4 py-3 rounded mb-4 text-sm font-medium" role="alert">
+        <span id="alertText"></span>
+        <button onclick="this.parentElement.style.display='none'" class="float-right text-xl font-bold">&times;</button>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto bg-white rounded-lg shadow">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-700 text-white sticky top-0">
+                <tr>
+                    <th class="px-6 py-3 text-left font-semibold uppercase tracking-wider">Ticket #</th>
+                    <th class="px-6 py-3 text-left font-semibold uppercase tracking-wider">Title</th>
+                    <th class="px-6 py-3 text-left font-semibold uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left font-semibold uppercase tracking-wider">Priority</th>
+                    <th class="px-6 py-3 text-left font-semibold uppercase tracking-wider">Assigned To</th>
+                    <th class="px-6 py-3 text-left font-semibold uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for ticket in tickets %}
+                <tr id="ticket-row-{{ ticket.id }}">
+                    <td class="px-6 py-4">{{ ticket.ticket_number }}</td>
+                    <td class="px-6 py-4">{{ ticket.ticket_title }}</td>
+                    <td class="px-6 py-4">
+                        <span class="inline-block px-2 py-1 rounded-full text-xs font-medium
+                            {% if ticket.status == 'Open' %} bg-blue-100 text-blue-800
+                            {% elif ticket.status == 'In Progress' %} bg-orange-100 text-orange-800
+                            {% elif ticket.status == 'Resolved' %} bg-green-100 text-green-800
+                            {% elif ticket.status == 'Closed' %} bg-gray-200 text-gray-600
+                            {% endif %}">
+                            {{ ticket.status }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+    <span 
+        class="
+            px-2 py-1 rounded-full  text-sm
+            {% if ticket.priority_level == 'Low' %} bg-green-100 text-green-800
+            {% elif ticket.priority_level == 'Medium' %} bg-yellow-100 text-yellow-800
+            {% elif ticket.priority_level == 'High' %} bg-red-100 text-red-800
+            {% else %} bg-gray-500
+            {% endif %}
+        ">
+        {{ ticket.get_priority_level_display|default:"-" }}
+    </span>
+</td>
+                    <td class="px-6 py-4">
+    {% if ticket.assigned_technician %}
+        {{ ticket.assigned_technician.get_full_name|default:ticket.assigned_technician.username }}
+    {% else %}
+        Unassigned
+    {% endif %}
+</td>
+                    <td class="px-6 py-4 space-y-1">
+                        <form method="POST" class="assign-form flex items-center gap-2" data-ticket-id="{{ ticket.id }}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="assign">
+                            <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                            <select name="technician_id" class="border rounded px-2 py-1 text-sm">
+                                <option value="" >Select Technician</option>
+                                {% for tech in technicians %}
+                                 <option value="{{ tech.id }}" {% if ticket.assigned_technician and ticket.assigned_technician.id == tech.id %} selected {% endif %}>{{ tech.get_full_name|default:tech.username }} </option>
+                                {% endfor %}
+                            </select>
+                            <button class="bg-gray-700 text-white text-xs px-3 py-1 rounded hover:bg-blue-700 transition btn-text" type="submit">
+                                Assign
+                            </button>
+                        </form>
+
+                        {% if ticket.status != 'Closed' %}
+                      <!-- <button data-ticket-id="{{ ticket.id }}"
+                              class="close-ticket-btn bg-red-600 text-white text-xs px-3 py-1 rounded hover:bg-red-700 transition mt-1">
+                              Close Ticket
+                    </button> -->
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center px-6 py-4 text-gray-500">No tickets found matching your criteria.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" id="confirmCloseModal">
+    <div class="bg-white p-6 rounded-lg shadow max-w-sm w-full">
+        <h3 class="text-lg font-semibold mb-3">Confirm Ticket Closure</h3>
+        <p class="mb-4 text-sm text-gray-600">Are you sure you want to close this ticket? This action cannot be undone.</p>
+        <div class="flex justify-end gap-3">
+            <button onclick="hideModal()" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">Cancel</button>
+            <button onclick="closeTicket()" id="confirmCloseBtn" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 btn-text">Close Ticket</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    let currentTicketId = null;
+
+    function confirmClose(ticketId) {
+        currentTicketId = ticketId;
+        const modal = document.getElementById('confirmCloseModal');
+        modal.classList.remove('hidden'); modal.classList.add('flex');
+    }
+
+    function hideModal() {
+        const modal = document.getElementById('confirmCloseModal');
+        modal.classList.add('hidden'); modal.classList.remove('flex');
+        currentTicketId = null;
+    }
+
+    function closeTicket() {
+        const btn = document.getElementById('confirmCloseBtn');
+        const btnText = btn.querySelector('.btn-text');
+        btn.disabled = true; btnText.textContent = 'Processing...';
+
+        fetch("{% url 'manage_tickets' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: new URLSearchParams({ action: 'close', ticket_id: currentTicketId })
+        })
+        .then(r => r.json())
+        .then(data => {
+            showAlert(data.message || 'Ticket closed.', data.success ? 'success' : 'error');
+            if (data.success) {
+                document.getElementById(`ticket-row-${currentTicketId}`).remove();
+            }
+        })
+        .catch(() => showAlert('An error occurred.', 'error'))
+        .finally(() => {
+            hideModal();
+            btn.disabled = false; btnText.textContent = 'Close Ticket';
+        });
+    }
+
+    // Assign Technician via AJAX
+    document.querySelectorAll('.assign-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const ticketId = this.dataset.ticketId;
+            const technicianId = this.querySelector('select[name="technician_id"]').value;
+            const csrfToken = this.querySelector('[name=csrfmiddlewaretoken]').value;
+            const btn = this.querySelector('button'); 
+            const btnText = btn.querySelector('.btn-text');
+
+            btn.disabled = true; btnText.textContent = 'Assigning...';
+
+            fetch("{% url 'manage_tickets' %}", {
+                method: 'POST',
+                headers: { 
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({ 
+                    action: 'assign', 
+                    ticket_id: ticketId, 
+                    technician_id: technicianId 
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                showAlert(data.message || 'Technician assigned.', data.success ? 'success' : 'error');
+                if (data.success) {
+                    const row = document.getElementById(`ticket-row-${ticketId}`);
+                    if (row) {
+                        const techCell = row.querySelector('.assigned-technician');
+                        techCell.textContent = this.querySelector(`select[name="technician_id"] option:checked`).textContent;
+                    }
+                }
+            })
+            .catch(() => showAlert('An error occurred.', 'error'))
+            .finally(() => { btn.disabled = false; btnText.textContent = 'Assign'; });
+        });
+    });
+
+    function showAlert(message, type) {
+        const alert = document.getElementById('alertMessage');
+        const text = document.getElementById('alertText');
+        alert.classList.remove('hidden', 'bg-green-100', 'bg-red-100', 'text-green-700', 'text-red-700');
+        text.textContent = message;
+        alert.classList.add(type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700');
+        setTimeout(() => alert.classList.add('hidden'), 5000);
+    }
+
+    window.confirmClose = confirmClose;
+    window.closeTicket = closeTicket;
+    window.hideModal = hideModal;
+});
+</script>
+
+{% endblock %}

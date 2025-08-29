@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load heroicons %}
+{% load widget_tweaks %}
+
+
+{% block title %}CAB Requests{% endblock %}
+
+{% block sidebar %}
+<div class="flex flex-col w-64 h-full p-4 bg-gray-50 font-sans">
+    <!-- Panel Header -->
+    <div class="mb-6 p-4 rounded-lg shadow-md bg-white">
+        <h1 class="text-xl font-bold text-gray-800">
+            Admin Panel
+        </h1>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-1 space-y-1">
+        <ul class="dashboard-menu">
+            <li>
+                <a href="{% url 'admin_dashboard' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-gray-100 font-semibold{% endif %} hover:bg-gray-100">
+                    {% heroicon_outline "home" class="w-5 h-5" %}Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'manage_tickets' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "clipboard-document-list" class="w-5 h-5" %}Ticket Management
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'reports' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "chart-pie" class="w-5 h-5" %}Reports & Analytics
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'roles_management' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "users" class="w-5 h-5" %}Roles Management
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'user_role_list' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "users" class="w-5 h-5" %}User Management
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'cab_requests' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "folder-plus" class="w-5 h-5" %}CAB Requests
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'cab_requests_table' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "folder-plus" class="w-5 h-5" %}Existing Requests
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Logout anchored at bottom -->
+    <div class="mt-auto">
+        <a href="{% url 'logout' %}" 
+           class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-700 text-white hover:bg-red-500 hover:text-white">
+            {% heroicon_outline "arrow-left-on-rectangle" class="w-5 h-5" %}Logout
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen p-6">
+    <h2 class="text-center text-2xl font-semibold text-gray-900 mb-6">
+        CAB Request Form
+    </h2>
+    <p class="text-center text-gray-600 mb-6">
+        Submit a new Change Advisory Board (CAB) request using the form below.
+    </p>
+
+    <!-- New CAB Request Form -->
+ <form id="createForm" method="post"
+      action="{% url 'cab_requests' %}"
+          class="bg-white p-6 rounded-lg shadow-md max-w-6xl mx-auto space-y-6 border border-gray-200">
+        {% csrf_token %}
+        <div class="grid gap-6 md:grid-cols-2 border-b border-gray-200 pb-6">
+            {% for field in form %}
+            <div class="flex flex-col border border-gray-200 p-4 rounded-lg 
+                        {% if field.name == 'rejection_reason' %}hidden{% endif %}" 
+                 id="{% if field.name == 'rejection_reason' %}rejectionReasonDiv{% endif %}">
+                {{ field.label_tag }} 
+                {{ field|add_class:"border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" }}
+                {% if field.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ field.errors }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="flex justify-center">
+            <button type="submit" 
+                    class="bg-gray-700 hover:bg-gray-800 text-white font-semibold py-3 px-6 rounded-md transition">
+                Submit Request
+            </button>
+        </div>
+    </form>
+
+    
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const rejectButton = document.getElementById('rejectButton');
+    const approvalButton = document.getElementById('approveButton');
+    const rejectionReasonDiv = document.getElementById('rejectionReasonDivActions');
+    const submitRejectButton = document.getElementById('submitRejectButton');
+    const formAction = document.getElementById('formAction');
+    const approveForm = document.getElementById('approveForm');
+    const modal = document.getElementById('confirmationModal');
+    const modalMessage = document.getElementById('modalMessage');
+    const modalConfirm = document.getElementById('modalConfirm');
+    const modalCancel = document.getElementById('modalCancel');
+    const modalCancelFooter = document.getElementById('modalCancelFooter');
+
+    let currentAction = null;
+
+    // Toggle rejection reason
+    rejectButton.addEventListener('click', function() {
+        rejectionReasonDiv.classList.toggle('hidden');
+    });
+
+    // Approve button click
+    approvalButton.addEventListener('click', function() {
+        modalMessage.textContent = 'Are you sure you want to approve this request?';
+        currentAction = 'approve';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    });
+
+    // Submit rejection (after providing reason)
+    submitRejectButton.addEventListener('click', function() {
+        const rejectionReason = document.querySelector('[name="rejection_reason"]');
+        if (!rejectionReason.value) {
+            alert('Please select a rejection reason');
+            return;
+        }
+        modalMessage.textContent = 'Are you sure you want to reject this request?';
+        currentAction = 'reject';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    });
+
+    // Confirm action in modal
+    modalConfirm.addEventListener('click', function() {
+        if (currentAction) {
+            formAction.value = currentAction;
+            approveForm.submit();
+        }
+        modal.classList.add('hidden');
+    });
+
+    // Cancel modal
+    [modalCancel, modalCancelFooter].forEach(btn => {
+        btn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+    });
+});
+</script>
+{% endblock %}
+

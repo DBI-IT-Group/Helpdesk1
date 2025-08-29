@@ -1,0 +1,92 @@
+<!-- {% load static %} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login | Ticketing System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- <link rel="stylesheet" href="{% static 'css/dist/styles.css' %}"> -->
+</head>
+<body class="min-h-screen bg-gray-100">
+
+  <div class="flex flex-col md:flex-row min-h-screen">
+    
+    <!-- LEFT: Branding Section -->
+    <div class="md:w-1/2 bg-gradient-to-br from-gray-300 to-gray-900 text-white flex flex-col justify-center items-center p-8 relative">
+      <!-- Abstract background pattern -->
+      <div class="absolute inset-0 bg-[url('https://plus.unsplash.com/premium_photo-1664304168263-f18dcc6fb94a?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1yZWxhdGVkfDYwfHx8ZW58MHx8fHx8.png')] opacity-10 z-0"></div>
+
+      <!-- Branding content -->
+      <div class="z-10 text-center">
+        <!-- <img src="/static/images/logo.png" alt="Company Logo" class="w-28 mx-auto mb-6"> -->
+        <h1 class="text-3xl font-bold mb-4">Welcome to DBI-IT GROUP</h1>
+        <p class="text-lg text-gray-200 max-w-md mx-auto">
+          Streamlining support through technology. Secure. Scalable. Smart.
+        </p>
+
+        
+      </div>
+    </div>
+
+    <!-- RIGHT: Login Form -->
+    <div class="md:w-1/2 bg-white flex items-center justify-center p-8">
+      <div class="w-full max-w-md">
+        <img src="/static/images/dbi.png" alt="Company Logo" class="w-28 mx-auto mb-6">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-6 text-center">Sign in to your account</h2>
+        <form method="POST" class="space-y-6">
+          {% csrf_token %}
+
+          <!-- Email Field -->
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-600">Email Address</label>
+            <input type="email" name="email" id="email" required
+                   class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-600 focus:border-blue-600" />
+          </div>
+
+          <!-- Password Field -->
+          <div>
+            <label for="password" class="block text-sm font-medium text-gray-600">Password</label>
+            <div class="relative mt-1">
+              <input type="password" name="password" id="password" required
+                     class="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-600 focus:border-blue-600"/>
+              <button type="button" onclick="togglePassword()" class="absolute right-3 top-2.5 text-gray-500 text-sm">
+                
+
+              </button>
+            </div>
+          </div>
+
+          <!-- Remember Me & Forgot Password -->
+          <div class="flex items-center justify-between">
+            <label class="flex items-center text-sm text-gray-600 space-x-2">
+              <input type="checkbox" name="remember" class="form-checkbox text-blue-600">
+              <span>Remember me</span>
+            </label>
+            <a href="#" class="text-sm text-gray-300 hover:underline">Forgot password?</a>
+          </div>
+
+          <!-- Login Button -->
+          <button type="submit"
+                  class="w-full bg-gray-700 text-white py-2 rounded-md hover:bg-gray-500 transition duration-200">
+            Sign In
+          </button>
+        </form>
+
+        <div class="mt-10 text-sm text-gray-700">
+          Need help? Email us at <a href="mailto:support@dbi-itgroup.co.za" class="underline text-gray-300">support@dbi-itgroup.co.za</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Password Toggle Script -->
+  <script>
+    function togglePassword() {
+      const input = document.getElementById("password");
+      input.type = input.type === "password" ? "text" : "password";
+    }
+  </script>
+
+</body>
+</html>

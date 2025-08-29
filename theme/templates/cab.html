@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load heroicons %}
+
+{% block title %}CAB Dashboard{% endblock %}
+
+{% block sidebar %}
+<div class="flex flex-col w-64 h-full p-4 font-sans bg-gray-50">
+    <!-- Panel Header -->
+    <div class="mb-6 p-4 rounded-lg shadow-md bg-white">
+        <h1 class="text-xl font-bold text-gray-800">CAB</h1>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-1 space-y-1">
+        <ul class="dashboard-menu">
+            <li>
+                <a href="{% url 'cab' %}"
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700
+                          {% if request.resolver_match.url_name == 'cab' %} bg-gray-200 font-semibold {% endif %}
+                          hover:bg-gray-100">
+                    {% heroicon_outline "home" class="w-5 h-5" %}CAB Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'cab_stats' %}"
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700
+                          {% if request.resolver_match.url_name == 'cab_stats' %} bg-gray-200 font-semibold {% endif %}
+                          hover:bg-gray-100">
+                    {% heroicon_outline "chart-pie" class="w-5 h-5" %}Statistics
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Logout anchored at bottom -->
+    <div class="mt-auto">
+        <a href="{% url 'logout' %}"
+           class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-700 text-white
+                  hover:bg-red-500 hover:text-white">
+            {% heroicon_outline "arrow-left-on-rectangle" class="w-5 h-5" %}Logout
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-col items-center px-4 py-6 space-y-6">
+    <!-- Page Header -->
+    <div class="max-w-6xl mx-auto mt-8 text-center">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-2">CAB Requests</h2>
+        <p class="text-gray-500 mb-6">Overview of all CAB requests</p>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto w-full max-w-6xl border border-gray-100 rounded-lg shadow">
+        <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+            <thead class="bg-gray-700 text-white">
+                <tr>
+                    <th class="text-center px-4 py-2 font-semibold">Title</th>
+                    <th class="text-center px-4 py-2 font-semibold">Type</th>
+                    <th class="text-center px-4 py-2 font-semibold">Status</th>
+                    <th class="text-center px-4 py-2 font-semibold">Requested By</th>
+                    <th class="text-center px-4 py-2 font-semibold">Actions</th>
+                </tr>
+            </thead>
+<tbody class="bg-white divide-y divide-gray-200 ">
+    {% for req in requests %}
+    <tr class="hover:bg-gray-50 transition-colors">
+        <!-- Title with truncate for long names -->
+        <td class="text-center px-4 py-2 max-w-xs truncate">{{ req.title }}</td>
+        <td class="text-center px-4 py-2">{{ req.change_type }}</td>
+        <td class="text-center px-4 py-2">
+            <span class="px-2 py-1 rounded-full text-xs font-medium 
+                    {% if req.status == 'Approved' %}bg-green-100 text-green-800
+                    {% elif req.status == 'Rejected' %}bg-red-100 text-red-800
+                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                {{ req.get_status_display }}
+            </span>
+        </td>
+        <td class="text-center px-4 py-2">{{ req.requester.full_name }}</td>
+        <td class="text-center px-4 py-2">
+            <a href="{% url 'cab_request_detail' req.id %}"
+               class="px-2 text-sm rounded-full bg-emerald-200 text-emerald-600">View</a>
+        </td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="5" class="text-center px-4 py-6 text-gray-500">
+            🚫 No CAB Requests Found.
+            <a href="{% url 'cab_request_create' %}"
+               class="text-blue-600 hover:text-blue-800 underline">Create one?</a>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
+
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

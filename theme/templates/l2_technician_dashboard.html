@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% load heroicons %}
+
+{% block top_button %}
+<button class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+    Tickets <span class="bg-white text-blue-600 text-xs px-2 py-1 rounded-full">{{ total_l2_tickets }}</span>
+</button>
+{% endblock %}
+
+{% block sidebar %}
+
+<div class="flex flex-col w-64 h-full p-4  font-sans bg-gray-50">
+    <!-- Panel Header -->
+    <div class="mb-6 p-4 rounded-lg shadow-md bg-white">
+        <h1 class="text-xl font-bold text-gray-800">
+            Technician
+        </h1>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-1 space-y-1">
+        <ul class="dashboard-menu">
+            <li>
+                <a href="{% url 'escalated_tickets' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-gray-100 font-semibold{% endif %} hover:bg-gray-100">
+                    {% heroicon_outline "home" class="w-5 h-5" %}Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'l2_technician_dashboard' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "clipboard-document-list" class="w-5 h-5" %}Resolved Tickets
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'technician_requests' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "chart-pie" class="w-5 h-5" %}CAB Requests
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'technician_requestslist' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "users" class="w-5 h-5" %}Requests List
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Logout anchored at bottom -->
+    <div class="mt-auto">
+        <a href="{% url 'logout' %}" 
+           class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-700 text-white hover:bg-red-500 hover:text-white">
+            {% heroicon_outline "arrow-left-on-rectangle" class="w-5 h-5" %}Logout
+        </a>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-6">
+
+    <div class="text-center">
+        <h2 class="text-2xl font-semibold text-gray-800">Resolved Tickets</h2>
+        <p class="text-gray-600 mt-2 py-4">Manage and review tickets you have resolved</p>
+    <!-- Filter Controls -->
+    <form id="filterForm" method="get" class="flex flex-wrap gap-4 p-4">
+        <select name="priority" onchange="this.form.submit()" class="px-3 py-2 border rounded-md bg-white shadow-sm">
+            <option value="">All Priorities</option>
+            <option value="High" {% if request.GET.priority == 'High' %}selected{% endif %}>High</option>
+            <option value="Medium" {% if request.GET.priority == 'Medium' %}selected{% endif %}>Medium</option>
+            <option value="Low" {% if request.GET.priority == 'Low' %}selected{% endif %}>Low</option>
+        </select>
+
+        <select name="order" onchange="this.form.submit()" class="px-3 py-2 border rounded-md bg-white shadow-sm">
+            <option value="newest" {% if request.GET.order == 'newest' %}selected{% endif %}>Newest First</option>
+            <option value="oldest" {% if request.GET.order == 'oldest' %}selected{% endif %}>Oldest First</option>
+        </select>
+
+        <select name="department" onchange="this.form.submit()" class="px-3 py-2 border rounded-md bg-white shadow-sm">
+            <option value="">All Departments</option>
+            <option value="IT" {% if request.GET.department == 'IT' %}selected{% endif %}>IT</option>
+            <option value="HR" {% if request.GET.department == 'HR' %}selected{% endif %}>HR</option>
+            <option value="Finance" {% if request.GET.department == 'Finance' %}selected{% endif %}>Finance</option>
+        </select>
+    </form>
+
+    {% if completed_tickets %}
+    <!-- <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto max-h-[600px] bg-green-500/5 p-4 rounded-lg shadow"> -->
+        {% for ticket in completed_tickets %}
+        <div class="bg-white rounded-xl shadow hover:shadow-lg transition transform hover:scale-105">
+            <div class="px-4 py-3 flex justify-between items-center border-b">
+                <div>
+                    <h5 class="font-semibold text-gray-800">{{ ticket.ticket_title }}</h5>
+                    <span class="text-gray-500 text-sm">#{{ ticket.ticket_number }}</span>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-500 text-white">Completed</span>
+            </div>
+            <div class="p-4 space-y-2">
+                <p class="text-gray-700 truncate"><strong>Description:</strong> {{ ticket.problem_description|truncatechars:50 }}</p>
+                <p><strong>Status:</strong> <span class="px-2 py-1 rounded-full text-xs bg-gray-200 text-gray-700">{{ ticket.status }}</span></p>
+                <p><strong>Priority:</strong>
+                    <span class="px-2 py-1 rounded-full text-xs font-medium {% if ticket.priority_level == 'High' %}bg-red-500 text-white{% elif ticket.priority_level == 'Medium' %}bg-yellow-400 text-gray-800{% else %}bg-green-500 text-white{% endif %}">
+                        {{ ticket.priority_level }}
+                    </span>
+                </p>
+                <p><strong>Date:</strong> {{ ticket.date_created_on|date:"M d, Y - H:i" }}</p>
+
+                <!-- Actions Dropdown -->
+                <div class="relative">
+                    <button class="w-full bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium hover:bg-blue-700" type="button" data-bs-toggle="dropdown">
+                        Actions
+                    </button>
+                    <ul class="dropdown-menu mt-2 rounded-lg shadow-lg">
+                        <li>
+                            {% if ticket.accepted_by_l2 %}
+                                <button class="dropdown-item text-green-600" disabled>Accepted</button>
+                            {% else %}
+                                <form action="{% url 'accept_ticket_l2_completed' ticket.id %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item">Accept</button>
+                                </form>
+                            {% endif %}
+                        </li>
+                        <li>
+                            <a class="dropdown-item {% if not ticket.accepted_by_l2 %}opacity-50 pointer-events-none{% endif %}" 
+                               {% if ticket.accepted_by_l2 %} data-bs-toggle="modal" data-bs-target="#viewTicketModal{{ ticket.id }}" {% endif %}>
+                               View Ticket
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item {% if not ticket.accepted_by_l2 %}opacity-50 pointer-events-none{% endif %}" 
+                               {% if ticket.accepted_by_l2 %} href="mailto:{{ ticket.user.email }}?subject=Request More Info" {% endif %}>
+                               Request More Info
+                            </a>
+                        </li>
+                        <li>
+                            {% if ticket.accepted_by_l2 %}
+                                <form action="{% url 'close_ticket_completed' ticket.id %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item">Close</button>
+                                </form>
+                            {% else %}
+                                <button class="dropdown-item opacity-50 cursor-not-allowed" disabled>Close</button>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ticket Modal -->
+        <div class="modal fade" id="viewTicketModal{{ ticket.id }}" tabindex="-1" aria-labelledby="viewTicketLabel{{ ticket.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content rounded-lg shadow-lg">
+                    <div class="modal-header bg-blue-600 text-white px-4 py-3">
+                        <h5 class="modal-title" id="viewTicketLabel{{ ticket.id }}">Ticket Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4 space-y-2">
+                        <p><strong>Ticket Number:</strong> {{ ticket.ticket_number }}</p>
+                        <p><strong>Title:</strong> {{ ticket.ticket_title }}</p>
+                        <p><strong>Description:</strong> {{ ticket.problem_description }}</p>
+                        <p><strong>Department:</strong> {{ ticket.department }}</p>
+                        <p><strong>Priority:</strong>
+                            <span class="px-2 py-1 text-xs font-medium rounded-full {% if ticket.priority_level == 'High' %}bg-red-500 text-white{% elif ticket.priority_level == 'Medium' %}bg-yellow-400 text-gray-800{% else %}bg-green-500 text-white{% endif %}">
+                                {{ ticket.priority_level }}
+                            </span>
+                        </p>
+                        <p><strong>Status:</strong> {{ ticket.status }}</p>
+                        <p><strong>Date Created:</strong> {{ ticket.date_created_on|date:"M d, Y - H:i" }}</p>
+                        <p><strong>User Email:</strong> {{ ticket.user.email }}</p>
+
+                        {% if ticket.attachment %}
+                            {% with ticket.attachment.url|lower as url %}
+                            {% if url|slice:"-4:" == ".jpg" or url|slice:"-4:" == ".png" or url|slice:"-5:" == ".jpeg" %}
+                                <img src="{{ ticket.attachment.url }}" class="w-full rounded mt-2">
+                            {% else %}
+                                <a href="{{ ticket.attachment.url }}" target="_blank" class="text-blue-600 hover:underline mt-2 inline-block">Download Attachment</a>
+                            {% endif %}
+                            {% endwith %}
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer p-4">
+                        <button type="button" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-center text-gray-500 text-lg mt-6">No tickets available.</p>
+    {% endif %}
+
+</div>
+{% endblock %}

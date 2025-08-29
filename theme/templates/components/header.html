@@ -1,0 +1,23 @@
+<header class="w-full h-16 flex items-center justify-between px-6 shadow-md z-20"
+        style="background-color: var(--gray-800); color: var(--color-white); font-family: var(--default-font-family);">
+    <div class="flex items-center space-x-6 ">
+        <!-- Mobile Sidebar Toggle -->
+        <button class="md:hidden focus:outline-none" @click="sidebarOpen = true" aria-label="Toggle Sidebar"
+                style="color: inherit;">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2"
+                 viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+        </button>
+        <h2 class="text-lg font-semibold text-gray-700">Welcome, {{ user.full_name }}</h2>
+    </div>
+
+    {% if user.is_authenticated %}
+    <div class="relative flex items-center space-x-6">
+        {% block top_button %}{% endblock %}
+        {% include "components/notification_dropdown.html" %}
+        {% include "components/avatar_dropdown.html" %}
+    </div>
+    {% endif %}
+</header>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            display: flex;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        .left-frame {
+            width: 300px;
+            background-color: #06A3DA;
+            color: white;
+            padding: 20px;
+        }
+        .left-pane ul {
+            list-style: none;
+            padding: 0;
+        }
+        .left-pane ul li {
+            margin: 10px 0;
+        }
+        .left-pane ul li a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: white;
+            font-size: 16px;
+            padding: 10px;
+        }
+        .left-pane ul li a svg {
+            width: 24px;
+            height: 24px;
+            color: white;
+        }
+        .left-pane {
+            margin-top: 5em;
+        }
+        .profile-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin: 0 auto 5px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: white;
+        }
+        .profile-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .right-frame {
+            flex-grow: 1;
+            background-color: #ecf0f1;
+            padding: 20px;
+        }
+        .right-frame h1 {
+            color: #2c3e50;
+        }
+        .ticket-status-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .ticket-status {
+            width: 150px;
+            height: 100px;
+            background-color: #06A3DA;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="left-frame">
+        <div class="profile-circle">
+            <img src="profile.jpg" alt="Profile">
+        </div>
+        <div class="left-pane">
+            <ul>
+                <li>
+                    <a href="#">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9.75l9-6 9 6m-9 9V3m0 0l9 6.75M3 9.75l9 6.75"/>
+                        </svg>
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 4.5h15M4.5 12h15m-15 7.5h15"/>
+                        </svg>
+                        Tickets
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 7.5a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM3 21a9 9 0 0118 0"/>
+                        </svg>
+                        Users
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6.75h3M10.5 12h3m-3 5.25h3"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12c0 4.971-4.029 9-9 9s-9-4.029-9-9 4.029-9 9-9 9 4.029 9 9z"/>
+                        </svg>
+                        Settings
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="right-frame">
+        <h1>Welcome to the Dashboard</h1>
+        <div class="ticket-status-container">
+            <div class="ticket-status">Open Tickets</div>
+            <div class="ticket-status">In Progress</div>
+            <div class="ticket-status">Closed Tickets</div>
+        </div>
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+</html>

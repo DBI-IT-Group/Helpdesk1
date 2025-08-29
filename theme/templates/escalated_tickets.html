@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load heroicons %}
+
+{% block top_button %}
+<button class="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition">
+    Tickets <span class="ml-2 px-2 py-0.5 bg-white text-blue-600 rounded-full text-xs">{{ total_l2_tickets }}</span>
+</button>
+{% endblock %}
+
+{% block sidebar %}
+
+<div class="flex flex-col w-64 h-full p-4  font-sans bg-gray-50">
+    <!-- Panel Header -->
+    <div class="mb-6 p-4 rounded-lg shadow-md bg-white">
+        <h1 class="text-xl font-bold text-gray-800">
+            Technician
+        </h1>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-1 space-y-1">
+        <ul class="dashboard-menu">
+            <li>
+                <a href="{% url 'escalated_tickets' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-gray-100 font-semibold{% endif %} hover:bg-gray-100">
+                    {% heroicon_outline "home" class="w-5 h-5" %}Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'l2_technician_dashboard' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "clipboard-document-list" class="w-5 h-5" %}Resolved Tickets
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'technician_requests' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "chart-pie" class="w-5 h-5" %}CAB Requests
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'technician_requestslist' %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100">
+                    {% heroicon_outline "users" class="w-5 h-5" %}Requests List
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Logout anchored at bottom -->
+    <div class="mt-auto">
+        <a href="{% url 'logout' %}" 
+           class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-700 text-white hover:bg-red-500 hover:text-white">
+            {% heroicon_outline "arrow-left-on-rectangle" class="w-5 h-5" %}Logout
+        </a>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block content %}
+<!-- Panel Header -->
+<div class="container mx-auto px-4 mt-4">
+    <div class="">
+        <h5 class="text-xl font-semibold text-center">Escalated Tickets</h5>
+        <p class="text-sm text-gray-600 py-4 text-center">Manage and resolve escalated tickets assigned to you</p>
+    </div>
+
+    <!-- Filter Controls -->
+    <form id="filterForm" method="get" class="flex flex-wrap gap-3 mb-4 ">
+        <select name="priority" id="prioritySelect" class="form-select px-3 py-2 rounded border " onchange="this.form.submit();">
+            <option value="">All Priorities</option>
+            <option value="High" {% if request.GET.priority == 'High' %}selected{% endif %}>High</option>
+            <option value="Medium" {% if request.GET.priority == 'Medium' %}selected{% endif %}>Medium</option>
+            <option value="Low" {% if request.GET.priority == 'Low' %}selected{% endif %}>Low</option>
+        </select>
+
+        <select name="order" id="orderSelect" class="form-select px-3 py-2 rounded border" onchange="this.form.submit();">
+            <option value="newest" {% if request.GET.order == 'newest' %}selected{% endif %}>Newest First</option>
+            <option value="oldest" {% if request.GET.order == 'oldest' %}selected{% endif %}>Oldest First</option>
+        </select>
+
+        <select name="department" id="departmentSelect" class="form-select px-3 py-2 rounded border" onchange="this.form.submit();">
+            <option value="">All Departments</option>
+            <option value="IT" {% if request.GET.department == 'IT' %}selected{% endif %}>IT</option>
+            <option value="HR" {% if request.GET.department == 'HR' %}selected{% endif %}>HR</option>
+            <option value="Finance" {% if request.GET.department == 'Finance' %}selected{% endif %}>Finance</option>
+        </select>
+    </form>
+
+    <div class="grid grid-cols-1 gap-4 max-h-[600px] overflow-y-auto">
+        {% for ticket in escalated_tickets %}
+        <div class="bg-white shadow rounded-lg p-4">
+            <div class="flex justify-between items-center mb-2">
+                <h5 class="text-lg font-semibold">{{ ticket.ticket_title }} - <span class="text-gray-500">{{ ticket.ticket_number }}</span></h5>
+                <span class="px-2 py-1 rounded bg-orange-500 text-white text-sm">Escalated</span>
+            </div>
+            <p><strong>Description:</strong> {{ ticket.problem_description|truncatechars:50 }}</p>
+            <p><strong>Status:</strong> <span class="px-2 py-1 rounded bg-gray-300 text-gray-800">{{ ticket.status }}</span></p>
+            <p><strong>Priority:</strong> 
+                <span class="px-2 py-1 rounded text-white
+                    {% if ticket.priority_level == 'High' %} bg-red-500
+                    {% elif ticket.priority_level == 'Medium' %} bg-yellow-400
+                    {% else %} bg-green-500 {% endif %}">
+                    {{ ticket.priority_level }}
+                </span>
+            </p>
+            <p><strong>Date:</strong> {{ ticket.date_created_on }}</p>
+
+            <!-- Actions Dropdown -->
+            <div class="relative inline-block text-left mt-2">
+                <button type="button" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-blue-600 text-white hover:bg-blue-700">
+                    Actions
+                </button>
+                <ul class="absolute hidden mt-2 w-56 bg-white shadow-lg rounded-md z-10">
+                    <li>
+                        {% if ticket.accepted_by_l2 %}
+                        <button class="w-full text-left px-4 py-2 text-green-600" disabled>Accepted</button>
+                        {% else %}
+                        <form action="{% url 'accept_ticket_l2_escalated' ticket.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full text-left px-4 py-2 hover:bg-gray-100">Accept</button>
+                        </form>
+                        {% endif %}
+                    </li>
+                    <li>
+                        <a class="w-full block px-4 py-2 {% if not ticket.accepted_by_l2 %}opacity-50 pointer-events-none{% endif %}"
+                           href="#" {% if ticket.accepted_by_l2 %} data-bs-toggle="modal" data-bs-target="#viewTicketModal{{ ticket.id }}" {% endif %}>
+                           View Ticket
+                        </a>
+                    </li>
+                    <li>
+                        <a class="w-full block px-4 py-2 {% if not ticket.accepted_by_l2 %}opacity-50 pointer-events-none{% endif %}"
+                           {% if ticket.accepted_by_l2 %} href="mailto:{{ ticket.user.email }}?subject=More info needed on ticket {{ ticket.ticket_number }}" {% else %} href="#" {% endif %}>
+                           Request More Info
+                        </a>
+                    </li>
+                    <li>
+                        {% if ticket.accepted_by_l2 %}
+                        <form action="{% url 'close_ticket_escalated' ticket.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full text-left px-4 py-2 hover:bg-gray-100">Close</button>
+                        </form>
+                        {% else %}
+                        <button class="w-full text-left px-4 py-2 opacity-50 cursor-not-allowed" disabled>Close</button>
+                        {% endif %}
+                    </li>
+                </ul>
+            </div>
+        </div>
+        {% empty %}
+        <div class="bg-gray-50 p-4 rounded text-center text-gray-600">No escalated tickets assigned to you.</div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
